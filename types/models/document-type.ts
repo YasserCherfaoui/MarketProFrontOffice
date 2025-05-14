@@ -1,0 +1,1 @@
+export type DocumentType = 'INVOICE' | 'PACKING_SLIP' | 'PURCHASE_ORDER' | 'CONTRACT'; 
