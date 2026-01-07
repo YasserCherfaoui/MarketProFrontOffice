@@ -3,12 +3,18 @@
 
 import CartDrawer from "@/components/CartDrawer";
 import NewNavbar from "@/components/NewNavbar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@heroui/checkbox";
 import { useQuery } from '@tanstack/react-query';
 import {
   Filter,
+  Heart,
   Menu,
   Search,
   ShoppingCart,
@@ -32,114 +38,126 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
-  const [currentImageIndex] = React.useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = React.useState(0);
   const images = product.images || [];
-  // Demo values for visual only
-  const rating = 4.8;
-  const ratingCount = 17000;
-  const sold = 18;
-  const stock = 35;
-  const old_price = product.base_price * 1.5; // Demo old price for discount
-  const hasDiscount = old_price > product.base_price;
-
   return (
-    <div className="product-card h-full p-4 border border-gray-100 hover:border-primary rounded-2xl relative transition-all duration-200 bg-white flex flex-col">
-      <a
-        href={"/product-details-two"}
-        className="product-card__thumb flex justify-center items-center rounded-lg bg-gray-50 relative aspect-square overflow-hidden"
-      >
+    <Card className="h-full overflow-hidden border border-border hover:border-primary/50 transition-colors duration-300">
+      <div className="relative aspect-square overflow-hidden bg-muted">
         {images.length > 0 ? (
-          <img
-            src={images[currentImageIndex].url}
+          <img 
+            src={images[currentImageIndex].url} 
             alt={product.name}
-            className="w-auto max-w-full max-h-full object-contain"
+            className="h-full w-full object-cover transition-all hover:scale-105 duration-300"
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-gray-100 text-gray-400">No Image</div>
         )}
-        {/* Discount badge if applicable */}
-        {hasDiscount && (
-          <span className="product-card__badge bg-danger-600 px-2 py-1 text-xs text-white absolute left-0 top-0 rounded-bl-lg rounded-tr-lg">Sale {Math.round(100 - (product.base_price / old_price) * 100)}%</span>
-        )}
-      </a>
-      <div className="product-card__content mt-4 flex flex-col flex-1">
-        <h6 className="title text-base font-semibold mt-2 mb-2 line-clamp-2">
-          <a href={"/product-details-two"} className="link hover:text-primary transition-colors">
-            {product.name}
-          </a>
-        </h6>
-        <div className="flex items-center mb-3 mt-2 gap-2">
-          <span className="text-xs font-medium text-gray-500">{rating}</span>
-          <span className="text-yellow-500 flex items-center text-base">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-          </span>
-          <span className="text-xs font-medium text-gray-500">({ratingCount.toLocaleString()})</span>
-        </div>
-        <div className="mt-2">
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div
-              className="bg-primary-600 h-1.5 rounded-full"
-              style={{ width: `${Math.round((sold / stock) * 100)}%` }}
-            />
+        {images.length > 1 && (
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+            {images.map((_, idx) => (
+              <button
+                key={idx}
+                className={`h-1.5 w-6 rounded-full ${idx === currentImageIndex ? 'bg-primary' : 'bg-background/70'}`}
+                onClick={() => setCurrentImageIndex(idx)}
+              />
+            ))}
           </div>
-          <span className="text-gray-900 text-xs font-medium mt-2 block">
-            Sold: {sold}/{stock}
-          </span>
+        )}
+        <div className="absolute top-2 right-2 flex flex-col gap-2">
+          <Button size="icon" variant="outline" className="h-8 w-8 rounded-full bg-background/70 backdrop-blur-sm">
+            <Heart className="h-4 w-4" />
+          </Button>
         </div>
-        <div className="product-card__price my-4 flex items-center gap-2">
-          {hasDiscount && (
-            <span className="text-gray-400 text-sm font-semibold line-through">
-              ${old_price.toFixed(2)}
-            </span>
-          )}
-          <span className="text-heading text-base font-semibold">
-            ${product.base_price.toFixed(2)} <span className="text-gray-500 font-normal">/Qty</span>
-          </span>
-        </div>
-        <button
-          className="product-card__cart btn bg-gray-50 text-gray-900 hover:bg-primary hover:text-white py-2 px-6 rounded-lg flex items-center justify-center gap-2 font-medium mt-auto"
-          onClick={() => onAddToCart(product)}
-          disabled={!product.is_active}
-        >
-          Add To Cart <ShoppingCart className="w-4 h-4" />
-        </button>
+        {product.b2b_price && (
+          <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
+            B2B: ${product.b2b_price.toFixed(2)}
+          </Badge>
+        )}
+        {!product.is_active && (
+          <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+            <Badge variant="destructive" className="text-base py-1.5">Inactive</Badge>
+          </div>
+        )}
       </div>
-    </div>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <Star className="h-4 w-4 fill-primary text-primary mr-1" />
+            <span className="text-sm font-medium">{product.base_price.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {product.categories?.map((category) => (
+              <Badge key={category.ID} variant="outline" className="text-xs">
+                {category.name}
+              </Badge>
+            ))}
+          </div>
+        </div>
+        <h3 className="font-semibold text-lg line-clamp-1 mb-1">{product.name}</h3>
+        <p className="text-muted-foreground text-sm line-clamp-2 mb-3">{product.description}</p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-lg">${product.base_price.toFixed(2)}</span>
+            {product.b2b_price && (
+              <span className="text-muted-foreground text-sm">B2B: ${product.b2b_price.toFixed(2)}</span>
+            )}
+          </div>
+          <Button size="sm" disabled={!product.is_active} onClick={() => onAddToCart(product)}>
+            <ShoppingCart className="h-4 w-4 mr-2" />
+            Add to Cart
+          </Button>
+        </div>
+        <Separator className="my-3" />
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+          {product.specifications?.slice(0, 4).map((spec) => (
+            <div key={spec.ID}>
+              <span className="text-muted-foreground">{spec.name}:</span>{" "}
+              <span className="font-medium">{spec.value}</span>
+            </div>
+          ))}
+          {product.specifications && product.specifications.length > 4 && (
+            <Button variant="link" className="text-xs p-0 h-auto col-span-2">
+              Show more specifications
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
-// Redesigned Category List for Sidebar
+// Recursive Category List for Sidebar
 const CategoryList: React.FC<{
   categories: Category[];
   selectedCategories: number[];
   onCategoryChange: (categoryId: number) => void;
 }> = ({ categories, selectedCategories, onCategoryChange }) => (
-  <ul className="max-h-[540px] overflow-y-auto space-y-2">
+  <ul className="pl-2">
     {categories
-      .filter((category) => !category.parent_id)
+      .filter((category) => !category.parent_id) // Only show parent categories at the top level
       .map((category) => (
-        <li key={category.ID} className="mb-2">
-          <button
-            type="button"
-            className={`w-full flex items-center justify-between text-left px-3 py-2 rounded-md transition-colors border border-transparent hover:bg-primary/10 hover:text-primary font-medium ${selectedCategories.includes(category.ID) ? 'bg-primary/10 text-primary border-primary' : 'text-gray-900'}`}
-            onClick={() => onCategoryChange(category.ID)}
-          >
-            <span>{category.name}</span>
-            {/* <span className="text-xs text-gray-500 font-normal">({category.products?.length ?? 12})</span> */}
-          </button>
+        <li key={category.ID} className="mb-1">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={`category-${category.ID}`}
+              checked={selectedCategories.includes(category.ID)}
+              onChange={() => onCategoryChange(category.ID)}
+            />
+            <Label htmlFor={`category-${category.ID}`}>{category.name}</Label>
+          </div>
           {category.children && category.children.length > 0 && (
-            <ul className="pl-4 mt-1 space-y-1">
+            <ul className="pl-4">
               {category.children.map((child) => (
-                <li key={child.ID}>
-                  <button
-                    type="button"
-                    className={`w-full flex items-center justify-between text-left px-3 py-2 rounded-md transition-colors border border-transparent hover:bg-primary/10 hover:text-primary font-medium ${selectedCategories.includes(child.ID) ? 'bg-primary/10 text-primary border-primary' : 'text-gray-900'}`}
-                    onClick={() => onCategoryChange(child.ID)}
-                  >
-                    <span>{child.name}</span>
-                    {/* <span className="text-xs text-gray-500 font-normal">({child.products?.length ?? 12})</span> */}
-                  </button>
-                  {/* Recursive for deeper subcategories */}
+                <li key={child.ID} className="mb-1">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`category-${child.ID}`}
+                      checked={selectedCategories.includes(child.ID)}
+                      onChange={() => onCategoryChange(child.ID)}
+                    />
+                    <Label htmlFor={`category-${child.ID}`}>{child.name}</Label>
+                  </div>
+                  {/* If children have their own children, render recursively */}
                   {child.children && child.children.length > 0 && (
                     <CategoryList
                       categories={child.children}
